@@ -5,8 +5,7 @@ from enum import Enum
 class TokenType(Enum):
     KEYWORD = r'\b(Var|Begin|End)\b'  # Ключевые слова
     IDENTIFIER = r'\b[a-zA-Z_][a-zA-Z0-9_]*\b'  # Идентификаторы
-    UNARY_OP = r'(?<=\b[-=(,])\s*-\s*'  # Унарные оператор - должен быть раньше оператора(возможно стоит перенести логику в синтаксический анализатор
-    OPERATOR = r'=|\+|-|\*|/'  # Операторы
+    OPERATOR = r'=|\+|-|\*|/'  # операторы
     SEMICOLON = r';'  # Точка с запятой
     COMMA = r','  # Запятая
     LPAREN = r'\('  # Левая скобка
@@ -15,6 +14,9 @@ class TokenType(Enum):
     SKIP = r'[ \t]+'  # Пробелы и табуляция
     NEWLINE = r'\n'  # Новая строка
     MISMATCH = r'.'  # Любой другой символ
+
+    def __eq__(self, other):
+        return self.value == other.value
 
     @classmethod
     def build_regex(cls):

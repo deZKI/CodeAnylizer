@@ -71,6 +71,79 @@ class TestLexer(unittest.TestCase):
         tokens = self.lexer.tokenize(code)
         self.assertEqual(tokens, expected_tokens)
 
+    def test_unary_operators(self):
+        code = "Var a = -5; b = -(10 + 3);"
+        expected_tokens = [
+            Token(TokenType.KEYWORD, 'Var', 1),
+            Token(TokenType.SKIP, ' ', 1),
+            Token(TokenType.IDENTIFIER, 'a', 1),
+            Token(TokenType.SKIP, ' ', 1),
+            Token(TokenType.OPERATOR, '=', 1),
+            Token(TokenType.SKIP, ' ', 1),
+            Token(TokenType.OPERATOR, '-', 1),  # Унарный минус перед числом
+            Token(TokenType.CONSTANT, '5', 1),
+            Token(TokenType.SEMICOLON, ';', 1),
+            Token(TokenType.SKIP, ' ', 1),
+            Token(TokenType.IDENTIFIER, 'b', 1),
+            Token(TokenType.SKIP, ' ', 1),
+            Token(TokenType.OPERATOR, '=', 1),
+            Token(TokenType.SKIP, ' ', 1),
+            Token(TokenType.OPERATOR, '-', 1),  # Унарный минус перед скобкой
+            Token(TokenType.LPAREN, '(', 1),
+            Token(TokenType.CONSTANT, '10', 1),
+            Token(TokenType.SKIP, ' ', 1),
+            Token(TokenType.OPERATOR, '+', 1),
+            Token(TokenType.SKIP, ' ', 1),
+            Token(TokenType.CONSTANT, '3', 1),
+            Token(TokenType.RPAREN, ')', 1),
+            Token(TokenType.SEMICOLON, ';', 1)
+        ]
+
+        result_tokens = self.lexer.tokenize(code)
+        self.assertEqual(result_tokens, expected_tokens)
+
+    def test_multi_line_program(self):
+        code = """
+           Var x = 10;
+           Begin
+               x = -x + 1;
+           End
+           """
+        expected_tokens_types = [
+            TokenType.NEWLINE,
+            TokenType.SKIP,
+            TokenType.KEYWORD,
+            TokenType.SKIP,
+            TokenType.IDENTIFIER,
+            TokenType.SKIP,
+            TokenType.OPERATOR,
+            TokenType.SKIP,
+            TokenType.CONSTANT,
+            TokenType.SEMICOLON,
+            TokenType.NEWLINE,
+            TokenType.SKIP,
+            TokenType.KEYWORD,
+            TokenType.NEWLINE,
+            TokenType.SKIP,
+            TokenType.IDENTIFIER,
+            TokenType.SKIP,
+            TokenType.OPERATOR,
+            TokenType.SKIP,
+            TokenType.OPERATOR,
+            TokenType.IDENTIFIER,
+            TokenType.SKIP,
+            TokenType.OPERATOR,
+            TokenType.SKIP,
+            TokenType.CONSTANT,
+            TokenType.SEMICOLON,
+            TokenType.NEWLINE,
+            TokenType.SKIP,
+            TokenType.KEYWORD,
+            TokenType.NEWLINE,
+            TokenType.SKIP
+        ]
+        result_tokens_types = [token.t_type for token in self.lexer.tokenize(code)]
+        self.assertEqual(result_tokens_types, expected_tokens_types)
 
 # Запуск тестов
 if __name__ == '__main__':
