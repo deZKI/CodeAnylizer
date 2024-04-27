@@ -1,5 +1,5 @@
 import re
-from models import Token, TokenType
+from lexer.models import Token, TokenType
 
 
 class Tokenizer:
@@ -14,6 +14,8 @@ class Tokenizer:
             match kind:
                 case 'MISMATCH':
                     raise RuntimeError(f'Не допустимое значение {value!r} на строке {current_line}')
+                case 'SKIP':
+                    continue
                 case 'NEWLINE':
                     tokens.append(Token(TokenType[kind], value, current_line))
                     current_line += 1
