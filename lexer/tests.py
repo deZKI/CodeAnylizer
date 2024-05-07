@@ -16,7 +16,7 @@ class TestLexer(unittest.TestCase):
         expected_tokens = [
             Token(TokenType.KEYWORD, 'Var', 1),
             Token(TokenType.IDENTIFIER, 'x', 1),
-            Token(TokenType.OPERATOR, '=', 1),
+            Token(TokenType.EQUAL, '=', 1),
             Token(TokenType.CONSTANT, '5', 1),
             Token(TokenType.SEMICOLON, ';', 1)
         ]
@@ -29,7 +29,7 @@ class TestLexer(unittest.TestCase):
         with self.assertRaises(RuntimeError) as cm:
             self.lexer.tokenize(code)
         the_exception = cm.exception
-        self.assertEqual(str(the_exception), 'Не допустимое значение \'$\' на строке 1')
+        self.assertEqual('Недопустимое значение \'$\' на строке 1', str(the_exception))
 
     def test_line_counting(self):
         """Тестирование подсчета строк."""
@@ -44,15 +44,15 @@ class TestLexer(unittest.TestCase):
         expected_tokens = [
             Token(TokenType.KEYWORD, 'Var', 1),
             Token(TokenType.IDENTIFIER, 'result', 1),
-            Token(TokenType.OPERATOR, '=', 1),
+            Token(TokenType.EQUAL, '=', 1),
             Token(TokenType.CONSTANT, '15', 1),
-            Token(TokenType.OPERATOR, '+', 1),
+            Token(TokenType.BINARY_OPERATOR, '+', 1),
             Token(TokenType.LPAREN, '(', 1),
             Token(TokenType.CONSTANT, '42', 1),
-            Token(TokenType.OPERATOR, '/', 1),
+            Token(TokenType.BINARY_OPERATOR, '/', 1),
             Token(TokenType.CONSTANT, '6', 1),
             Token(TokenType.RPAREN, ')', 1),
-            Token(TokenType.OPERATOR, '-', 1),
+            Token(TokenType.BINARY_OPERATOR, '-', 1),
             Token(TokenType.CONSTANT, '7', 1),
             Token(TokenType.SEMICOLON, ';', 1)
         ]
@@ -64,16 +64,16 @@ class TestLexer(unittest.TestCase):
         expected_tokens = [
             Token(TokenType.KEYWORD, 'Var', 1),
             Token(TokenType.IDENTIFIER, 'a', 1),
-            Token(TokenType.OPERATOR, '=', 1),
-            Token(TokenType.OPERATOR, '-', 1),  # Унарный минус перед числом
+            Token(TokenType.EQUAL, '=', 1),
+            Token(TokenType.UNARY_OPERATOR, '-', 1),  # Унарный минус перед числом
             Token(TokenType.CONSTANT, '5', 1),
             Token(TokenType.SEMICOLON, ';', 1),
             Token(TokenType.IDENTIFIER, 'b', 1),
-            Token(TokenType.OPERATOR, '=', 1),
-            Token(TokenType.OPERATOR, '-', 1),  # Унарный минус перед скобкой
+            Token(TokenType.EQUAL, '=', 1),
+            Token(TokenType.UNARY_OPERATOR, '-', 1),  # Унарный минус перед скобкой
             Token(TokenType.LPAREN, '(', 1),
             Token(TokenType.CONSTANT, '10', 1),
-            Token(TokenType.OPERATOR, '+', 1),
+            Token(TokenType.BINARY_OPERATOR, '+', 1),
             Token(TokenType.CONSTANT, '3', 1),
             Token(TokenType.RPAREN, ')', 1),
             Token(TokenType.SEMICOLON, ';', 1)
@@ -93,17 +93,17 @@ class TestLexer(unittest.TestCase):
             TokenType.NEWLINE,
             TokenType.KEYWORD,
             TokenType.IDENTIFIER,
-            TokenType.OPERATOR,
+            TokenType.EQUAL,
             TokenType.CONSTANT,
             TokenType.SEMICOLON,
             TokenType.NEWLINE,
             TokenType.KEYWORD,
             TokenType.NEWLINE,
             TokenType.IDENTIFIER,
-            TokenType.OPERATOR,
-            TokenType.OPERATOR,
+            TokenType.EQUAL,
+            TokenType.UNARY_OPERATOR,
             TokenType.IDENTIFIER,
-            TokenType.OPERATOR,
+            TokenType.BINARY_OPERATOR,
             TokenType.CONSTANT,
             TokenType.SEMICOLON,
             TokenType.NEWLINE,
