@@ -37,7 +37,7 @@ class Parser:
         self.current_token_index = 0
 
     @property
-    def current_token(self) -> Optional[Token]:
+    def __current_token(self) -> Optional[Token]:
         """
         Возвращает текущий токен или None, если достигнут конец списка токенов.
 
@@ -48,7 +48,7 @@ class Parser:
             return self.tokens[self.current_token_index]
         return None
 
-    def eat(self, token_type: TokenType):
+    def __eat(self, token_type: TokenType):
         """
         Проверяет, соответствует ли текущий токен ожидаемому типу, и переходит к следующему токену.
 
@@ -58,12 +58,12 @@ class Parser:
         Вызывает:
             Exception: Если текущий токен не соответствует ожидаемому типу или достигнут конец списка токенов.
         """
-        if self.current_token and self.current_token.t_type == token_type:
+        if self.__current_token and self.__current_token.t_type == token_type:
             self.current_token_index += 1
         else:
-            self.error(token_type)
+            self.__error(token_type)
 
-    def error(self, expected_type: Union[TokenType, str]):
+    def __error(self, expected_type: Union[TokenType, str]):
         """
         Вызывает исключение с сообщением об ошибке, указывающим ожидаемый и фактический типы токенов.
 
@@ -73,11 +73,11 @@ class Parser:
         Вызывает:
             Exception: С сообщением об ошибке.
         """
-        if self.current_token is None:
+        if self.__current_token is None:
             raise Exception(f'Error: expected {expected_type}, but got end of input')
         else:
             raise Exception(
-                f'Error: expected {expected_type}, got {self.current_token.t_type} on the line {self.current_token.line}')
+                f'Error: expected {expected_type}, got {self.__current_token.t_type} on the line {self.__current_token.line}')
 
     def parse(self):
         """
@@ -86,9 +86,9 @@ class Parser:
         Возвращает:
             Результат выполнения метода program().
         """
-        return self.program()
+        return self.__program()
 
-    def program(self):
+    def __program(self):
         """
         Обрабатывает правило <Программа>.
 
@@ -98,13 +98,13 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        self.eat(TokenType.KEYWORD)  # Var
+        self.__eat(TokenType.KEYWORD)  # Var
         self.variable_declaration()
-        self.eat(TokenType.NEWLINE)  # NewLine
-        self.eat(TokenType.KEYWORD)  # Begin
-        self.eat(TokenType.NEWLINE)  # NewLine
-        self.assignment_list()
-        self.eat(TokenType.KEYWORD)  # End
+        self.__eat(TokenType.NEWLINE)  # NewLine
+        self.__eat(TokenType.KEYWORD)  # Begin
+        self.__eat(TokenType.NEWLINE)  # NewLine
+        self.__assignment_list()
+        self.__eat(TokenType.KEYWORD)  # End
 
     def variable_declaration(self):
         """
@@ -116,9 +116,9 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        self.identifier_list()
+        self.__identifier_list()
 
-    def identifier_list(self):
+    def __identifier_list(self):
         """
         Обрабатывает список идентификаторов.
 
@@ -128,13 +128,13 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        self.identifier()
-        while self.current_token and self.current_token.t_type == TokenType.COMMA:
-            self.eat(TokenType.COMMA)
-            self.identifier()
-        self.eat(TokenType.SEMICOLON)
+        self.__identifier()
+        while self.__current_token and self.__current_token.t_type == TokenType.COMMA:
+            self.__eat(TokenType.COMMA)
+            self.__identifier()
+        self.__eat(TokenType.SEMICOLON)
 
-    def identifier(self):
+    def __identifier(self):
         """
         Обрабатывает один идентификатор.
 
@@ -144,9 +144,9 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        self.eat(TokenType.IDENTIFIER)
+        self.__eat(TokenType.IDENTIFIER)
 
-    def assignment_list(self):
+    def __assignment_list(self):
         """
         Обрабатывает список присваиваний.
 
@@ -156,11 +156,11 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        self.assignment()
-        while self.current_token and self.current_token.t_type == TokenType.IDENTIFIER:
-            self.assignment()
+        self.__assignment()
+        while self.__current_token and self.__current_token.t_type == TokenType.IDENTIFIER:
+            self.__assignment()
 
-    def assignment(self):
+    def __assignment(self):
         """
         Обрабатывает одно присваивание.
 
@@ -170,13 +170,13 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        self.identifier()
-        self.eat(TokenType.EQUAL)
-        self.expression()
-        self.eat(TokenType.SEMICOLON)
-        self.eat(TokenType.NEWLINE)  # NewLine
+        self.__identifier()
+        self.__eat(TokenType.EQUAL)
+        self.__expression()
+        self.__eat(TokenType.SEMICOLON)
+        self.__eat(TokenType.NEWLINE)  # NewLine
 
-    def expression(self):
+    def __expression(self):
         """
         Обрабатывает выражение.
 
@@ -186,11 +186,11 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        if self.current_token and self.current_token.t_type == TokenType.UNARY_OPERATOR:
-            self.eat(TokenType.UNARY_OPERATOR)
-        self.term()
+        if self.__current_token and self.__current_token.t_type == TokenType.UNARY_OPERATOR:
+            self.__eat(TokenType.UNARY_OPERATOR)
+        self.__term()
 
-    def term(self):
+    def __term(self):
         """
         Обрабатывает терм в выражении.
 
@@ -200,12 +200,12 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        self.factor()
-        while self.current_token and self.current_token.t_type in (TokenType.BINARY_OPERATOR,):
-            self.eat(self.current_token.t_type)
-            self.factor()
+        self.__factor()
+        while self.__current_token and self.__current_token.t_type in (TokenType.BINARY_OPERATOR,):
+            self.__eat(self.__current_token.t_type)
+            self.__factor()
 
-    def factor(self):
+    def __factor(self):
         """
         Обрабатывает фактор в выражении.
 
@@ -215,13 +215,13 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        if self.current_token.t_type == TokenType.LPAREN:
-            self.eat(TokenType.LPAREN)
-            self.expression()
-            self.eat(TokenType.RPAREN)
-        elif self.current_token.t_type == TokenType.IDENTIFIER:
-            self.eat(TokenType.IDENTIFIER)
-        elif self.current_token.t_type == TokenType.CONSTANT:
-            self.eat(TokenType.CONSTANT)
+        if self.__current_token.t_type == TokenType.LPAREN:
+            self.__eat(TokenType.LPAREN)
+            self.__expression()
+            self.__eat(TokenType.RPAREN)
+        elif self.__current_token.t_type == TokenType.IDENTIFIER:
+            self.__eat(TokenType.IDENTIFIER)
+        elif self.__current_token.t_type == TokenType.CONSTANT:
+            self.__eat(TokenType.CONSTANT)
         else:
-            self.error("IDENTIFIER or CONSTANT")
+            self.__error("IDENTIFIER or CONSTANT")
