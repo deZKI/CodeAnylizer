@@ -5,7 +5,7 @@ from enum import Enum
 class TokenType(Enum):
     KEYWORD = r'\b(Var|Begin|End)\b'  # Ключевые слова
     IDENTIFIER = r'\b[a-zA-Z_][a-zA-Z0-9_]*\b'  # Идентификаторы
-    EQUAL = r'='  # Присваивание
+    EQUAL = r':='  # Присваивание
     UNARY_OPERATOR = r'-'  # Унарный оператор
     BINARY_OPERATOR = r'\+|-|\*|/'  # Бинарные операторы
     SEMICOLON = r';'  # Точка с запятой

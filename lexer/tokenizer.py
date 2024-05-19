@@ -17,14 +17,16 @@ class Tokenizer:
                 case 'SKIP':
                     continue
                 case 'NEWLINE':
+                    if len(tokens) == 0:  # Провека что первый токен не новая строка
+                        continue
                     tokens.append(Token(TokenType[kind], value, current_line))
                     current_line += 1
                 case 'UNARY_OPERATOR':
                     # Проверьте, является ли этот унарный оператор или бинарный
                     if (len(tokens) == 0 or
-                        tokens[-1].t_type in [TokenType.SEMICOLON, TokenType.COMMA,
-                                             TokenType.LPAREN, TokenType.BINARY_OPERATOR,
-                                             TokenType.KEYWORD, TokenType.NEWLINE, TokenType.EQUAL]):
+                            tokens[-1].t_type in [TokenType.SEMICOLON, TokenType.COMMA,
+                                                  TokenType.LPAREN, TokenType.BINARY_OPERATOR,
+                                                  TokenType.KEYWORD, TokenType.NEWLINE, TokenType.EQUAL]):
                         tokens.append(Token(TokenType.UNARY_OPERATOR, value, current_line))
                     else:
                         tokens.append(Token(TokenType.BINARY_OPERATOR, value, current_line))
