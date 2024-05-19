@@ -1,7 +1,8 @@
 import unittest
+
 from lexer.tokenizer import Tokenizer
 from parser import Parser
-from lexer.models import Token, TokenType
+
 
 class TestParser(unittest.TestCase):
     """
