@@ -179,6 +179,39 @@ class TestParser(unittest.TestCase):
             parser.parse()
         self.assertEqual(str(cm.exception), "Error: expected TokenType.KEYWORD, got TokenType.IDENTIFIER on the line 1")
 
+    def test_operator_precedence(self):
+        """
+        Проверяет обработку выражений с разными приоритетами операций.
+        Ожидаемый результат: Успешный разбор без ошибок и правильный AST.
+        """
+        code = """
+        Var x;
+        Begin
+            x := 5 + 2 * 3;
+        End
+        """
+        tokens = self.tokenizer.tokenize(code)
+        parser = Parser(tokens)
+        ast = parser.parse()
+
+        self.assertIsNotNone(ast)
+        # Найдем узел для присваивания
+        assign_node = ast.children[1].children[0]  # Program -> AssignList -> Assign
+        # Убедимся, что это узел присваивания
+        self.assertEqual(assign_node.node_type, 'Assign')
+        # Получим правую часть присваивания (выражение)
+        expr_node = assign_node.children[1]  # Assign -> Expr
+        # Проверим, что корневой узел выражения - это сложение
+        self.assertEqual(expr_node.node_type, 'BinOp')
+
+        # Проверим, что первый узел это константа 5
+        term_node = expr_node.children[0]  # Term
+        self.assertEqual(term_node.node_type, 'Constant', f"Actual children: {term_node.children}")
+
+        # Проверим, что второй узел это константа 5
+        self.assertEqual(expr_node.children[1].node_type, 'BinOp', f"Actual children: {expr_node.children}")
+        self.assertEqual(expr_node.children[1].value, '*')
+
 
 if __name__ == '__main__':
     unittest.main()

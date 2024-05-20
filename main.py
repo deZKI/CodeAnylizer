@@ -6,7 +6,7 @@ code = """
 Var x, y;
 Begin
     x := 5;
-    y := x + 10;
+    y := (x + 10) * 5;
 End
 """
 
@@ -17,4 +17,5 @@ if __name__ == '__main__':
 
     # Парсинг токенов
     parser = Parser(tokens)
-    parser.generate_syntax_graph('syntax_graph')
+    ast = parser.parse()
+    print(ast)
