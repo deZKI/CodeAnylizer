@@ -1,6 +1,6 @@
 from lexer.models import TokenType, Token
 from typing import Optional, Union
-
+import graphviz
 
 class Parser:
     """
@@ -9,6 +9,7 @@ class Parser:
     Атрибуты:
         tokens (list[Token]): Список токенов для синтаксического анализа.
         current_token_index (int): Индекс текущего токена в списке.
+        graph (graphviz.Digraph): Граф для визуализации синтаксического дерева.
 
     Методы:
         current_token: Возвращает текущий токен или None, если достигнут конец списка токенов.
@@ -24,6 +25,7 @@ class Parser:
         expression(): Обрабатывает выражение.
         term(): Обрабатывает терм в выражении.
         factor(): Обрабатывает фактор в выражении.
+        generate_syntax_graph(filename): Генерирует и сохраняет синтаксический граф.
     """
 
     def __init__(self, tokens: list[Token]):
@@ -35,6 +37,8 @@ class Parser:
         """
         self.tokens = tokens
         self.current_token_index = 0
+        self.graph = graphviz.Digraph(comment='Syntax Graph')
+        self.node_counter = 0
 
     @property
     def __current_token(self) -> Optional[Token]:
@@ -98,13 +102,17 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
+        self.graph.node('Program', '<Программа>')
+        self.graph.edge('Program', 'Var')
         self.__eat(TokenType.KEYWORD)  # Var
         self.variable_declaration()
         self.__eat(TokenType.NEWLINE)  # NewLine
+        self.graph.edge('Program', 'Begin')
         self.__eat(TokenType.KEYWORD)  # Begin
         self.__eat(TokenType.NEWLINE)  # NewLine
-        self.__assignment_list()
+        self.assignment_list()
         self.__eat(TokenType.KEYWORD)  # End
+        self.graph.edge('Program', 'End')
 
     def variable_declaration(self):
         """
@@ -116,9 +124,11 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        self.__identifier_list()
+        self.graph.node('VarDecl', '<Объявление переменных>')
+        self.graph.edge('Var', 'VarDecl')
+        self.identifier_list()
 
-    def __identifier_list(self):
+    def identifier_list(self):
         """
         Обрабатывает список идентификаторов.
 
@@ -128,13 +138,15 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        self.__identifier()
+        self.graph.node('IdList', '<Список переменных>')
+        self.graph.edge('VarDecl', 'IdList')
+        self.identifier()
         while self.__current_token and self.__current_token.t_type == TokenType.COMMA:
             self.__eat(TokenType.COMMA)
-            self.__identifier()
+            self.identifier()
         self.__eat(TokenType.SEMICOLON)
 
-    def __identifier(self):
+    def identifier(self):
         """
         Обрабатывает один идентификатор.
 
@@ -144,9 +156,13 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
+        node_id = f'Ident{self.node_counter}'
+        self.graph.node(node_id, '<Идент>')
+        self.graph.edge('IdList', node_id)
+        self.node_counter += 1
         self.__eat(TokenType.IDENTIFIER)
 
-    def __assignment_list(self):
+    def assignment_list(self):
         """
         Обрабатывает список присваиваний.
 
@@ -156,11 +172,13 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        self.__assignment()
+        self.graph.node('AssignList', '<Список присваиваний>')
+        self.graph.edge('Program', 'AssignList')
+        self.assignment()
         while self.__current_token and self.__current_token.t_type == TokenType.IDENTIFIER:
-            self.__assignment()
+            self.assignment()
 
-    def __assignment(self):
+    def assignment(self):
         """
         Обрабатывает одно присваивание.
 
@@ -170,13 +188,17 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        self.__identifier()
+        node_id = f'Assign{self.node_counter}'
+        self.graph.node(node_id, '<Присваивание>')
+        self.graph.edge('AssignList', node_id)
+        self.node_counter += 1
+        self.identifier()
         self.__eat(TokenType.EQUAL)
-        self.__expression()
+        self.expression()
         self.__eat(TokenType.SEMICOLON)
         self.__eat(TokenType.NEWLINE)  # NewLine
 
-    def __expression(self):
+    def expression(self):
         """
         Обрабатывает выражение.
 
@@ -186,11 +208,15 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
+        node_id = f'Expr{self.node_counter}'
+        self.graph.node(node_id, '<Выражение>')
+        self.graph.edge('Assign', node_id)
+        self.node_counter += 1
         if self.__current_token and self.__current_token.t_type == TokenType.UNARY_OPERATOR:
             self.__eat(TokenType.UNARY_OPERATOR)
-        self.__term()
+        self.term()
 
-    def __term(self):
+    def term(self):
         """
         Обрабатывает терм в выражении.
 
@@ -200,12 +226,16 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        self.__factor()
+        node_id = f'Term{self.node_counter}'
+        self.graph.node(node_id, '<Подвыражение>')
+        self.graph.edge('Expr', node_id)
+        self.node_counter += 1
+        self.factor()
         while self.__current_token and self.__current_token.t_type in (TokenType.BINARY_OPERATOR,):
             self.__eat(self.__current_token.t_type)
-            self.__factor()
+            self.factor()
 
-    def __factor(self):
+    def factor(self):
         """
         Обрабатывает фактор в выражении.
 
@@ -215,9 +245,13 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
+        node_id = f'Factor{self.node_counter}'
+        self.graph.node(node_id, '<Операнд>')
+        self.graph.edge('Term', node_id)
+        self.node_counter += 1
         if self.__current_token.t_type == TokenType.LPAREN:
             self.__eat(TokenType.LPAREN)
-            self.__expression()
+            self.expression()
             self.__eat(TokenType.RPAREN)
         elif self.__current_token.t_type == TokenType.IDENTIFIER:
             self.__eat(TokenType.IDENTIFIER)
@@ -225,3 +259,13 @@ class Parser:
             self.__eat(TokenType.CONSTANT)
         else:
             self.__error("IDENTIFIER or CONSTANT")
+
+    def generate_syntax_graph(self, filename: str = 'syntax_graph'):
+        """
+        Генерирует и сохраняет синтаксический граф.
+
+        Параметры:
+            filename (str): Имя файла для сохранения графа.
+        """
+        self.parse()
+        self.graph.render(filename, view=True)

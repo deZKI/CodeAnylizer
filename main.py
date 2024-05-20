@@ -17,4 +17,4 @@ if __name__ == '__main__':
 
     # Парсинг токенов
     parser = Parser(tokens)
-    parser.parse()
+    parser.generate_syntax_graph('syntax_graph')
