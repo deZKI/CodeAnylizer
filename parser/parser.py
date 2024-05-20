@@ -1,41 +1,9 @@
-from lexer.models import TokenType, Token
-from typing import Optional, Union, List
 import graphviz
 
+from lexer.models import TokenType, Token
+from typing import Optional, Union, List
 
-class ASTNode:
-    """
-    Класс ASTNode представляет узел абстрактного синтаксического дерева.
-
-    Атрибуты:
-        node_type (str): Тип узла (например, 'Program', 'VarDecl').
-        value (Optional[str]): Значение узла (например, имя переменной).
-        children (List[ASTNode]): Список дочерних узлов.
-    """
-
-    def __init__(self, node_type: str, value: Optional[str] = None):
-        self.node_type = node_type
-        self.value = value
-        self.children = []
-
-    def add_child(self, node: 'ASTNode'):
-        self.children.append(node)
-
-    def __str__(self):
-        return self._print_tree()
-
-    def _print_tree(self, level=0):
-        result = '  ' * level + f'{self.node_type}'
-        if self.value:
-            result += f' ({self.value})'
-        result += '\n'
-        for child in self.children:
-            result += child._print_tree(level + 1)
-        return result
-
-    def __repr__(self):
-        return self.__str__()
-
+from .ast_node import ASTNode
 
 
 class Parser:
@@ -136,7 +104,7 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        node = ASTNode('Program')
+        node = ASTNode('Program', line=1)
         self.graph.node('Program', '<Программа>')
         self.graph.edge('Program', 'Var')
         self.__eat(TokenType.KEYWORD)  # Var
@@ -163,7 +131,7 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        node = ASTNode('VarDecl')
+        node = ASTNode('VarDecl', line=self.__current_token.line)
         self.graph.node('VarDecl', '<Объявление переменных>')
         self.graph.edge('Var', 'VarDecl')
         node.add_child(self.identifier_list())
@@ -182,7 +150,7 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        node = ASTNode('IdList')
+        node = ASTNode('IdList', line=1)
         self.graph.node('IdList', '<Список переменных>')
         self.graph.edge('VarDecl', 'IdList')
         node.add_child(self.identifier())
@@ -209,7 +177,7 @@ class Parser:
         self.graph.node(node_id, '<Идент>')
         self.graph.edge('IdList', node_id)
         self.node_counter += 1
-        node = ASTNode('Ident', self.__current_token.value)
+        node = ASTNode('Ident', value=self.__current_token.value, line=self.__current_token.line)
         self.__eat(TokenType.IDENTIFIER)
         return node
 
@@ -226,7 +194,7 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        node = ASTNode('AssignList')
+        node = ASTNode('AssignList',  line=self.__current_token.line)
         self.graph.node('AssignList', '<Список присваиваний>')
         self.graph.edge('Program', 'AssignList')
         node.add_child(self.assignment())
@@ -251,7 +219,7 @@ class Parser:
         self.graph.node(node_id, '<Присваивание>')
         self.graph.edge('AssignList', node_id)
         self.node_counter += 1
-        node = ASTNode('Assign')
+        node = ASTNode('Assign', line=self.__current_token.line)
         node.add_child(self.identifier())
         self.__eat(TokenType.EQUAL)
         node.add_child(self.expression())
@@ -274,8 +242,8 @@ class Parser:
         """
         node = self.term()
         while self.__current_token and self.__current_token.t_type in (
-        TokenType.BINARY_OPERATOR,) and self.__current_token.value in ('+', '-'):
-            op_node = ASTNode('BinOp', self.__current_token.value)
+                TokenType.BINARY_OPERATOR,) and self.__current_token.value in ('+', '-'):
+            op_node = ASTNode('BinOp', value=self.__current_token.value, line=self.__current_token.line)
             self.__eat(self.__current_token.t_type)
             op_node.add_child(node)
             op_node.add_child(self.term())
@@ -297,8 +265,8 @@ class Parser:
         """
         node = self.factor()
         while self.__current_token and self.__current_token.t_type in (
-        TokenType.BINARY_OPERATOR,) and self.__current_token.value in ('*', '/'):
-            op_node = ASTNode('BinOp', self.__current_token.value)
+                TokenType.BINARY_OPERATOR,) and self.__current_token.value in ('*', '/'):
+            op_node = ASTNode('BinOp', value=self.__current_token.value, line=self.__current_token.line)
             self.__eat(self.__current_token.t_type)
             op_node.add_child(node)
             op_node.add_child(self.factor())
@@ -324,16 +292,16 @@ class Parser:
             self.__eat(TokenType.RPAREN)
             return node
         elif self.__current_token.t_type == TokenType.UNARY_OPERATOR:
-            node = ASTNode('UnaryOp', self.__current_token.value)
+            node = ASTNode('UnaryOp', value=self.__current_token.value, line=self.__current_token.line)
             self.__eat(TokenType.UNARY_OPERATOR)
             node.add_child(self.factor())
             return node
         elif self.__current_token.t_type == TokenType.IDENTIFIER:
-            node = ASTNode('Ident', self.__current_token.value)
+            node = ASTNode('Ident', value=self.__current_token.value, line=self.__current_token.line)
             self.__eat(TokenType.IDENTIFIER)
             return node
         elif self.__current_token.t_type == TokenType.CONSTANT:
-            node = ASTNode('Constant', self.__current_token.value)
+            node = ASTNode('Constant', value=self.__current_token.value, line=self.__current_token.line)
             self.__eat(TokenType.CONSTANT)
             return node
         else:
