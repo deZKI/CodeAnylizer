@@ -19,12 +19,6 @@ class TestSemanticAnalyzer(unittest.TestCase):
     def test_variable_declaration_and_usage(self):
         """
         Проверяет, что объявленные переменные могут быть использованы без ошибок.
-        Код:
-        Var x, y;
-        Begin
-            x := 5;
-            y := x + 10;
-        End
         Ожидаемый результат: Успешный разбор без ошибок.
         """
         code = """
@@ -47,11 +41,6 @@ class TestSemanticAnalyzer(unittest.TestCase):
     def test_undeclared_variable_usage(self):
         """
         Проверяет, что использование необъявленной переменной вызывает ошибку.
-        Код:
-        Var x;
-        Begin
-            y := 10;
-        End
         Ожидаемый результат: Ошибка семантического анализа, так как переменная 'y' не объявлена.
         """
         code = """
@@ -71,11 +60,6 @@ class TestSemanticAnalyzer(unittest.TestCase):
     def test_redeclaration_of_variable(self):
         """
         Проверяет, что повторное объявление переменной вызывает ошибку.
-        Код:
-        Var x, x;
-        Begin
-            x := 10;
-        End
         Ожидаемый результат: Ошибка семантического анализа, так как переменная 'x' объявлена дважды.
         """
         code = """
@@ -95,11 +79,6 @@ class TestSemanticAnalyzer(unittest.TestCase):
     def test_constant_usage(self):
         """
         Проверяет, что использование константы в выражении работает корректно.
-        Код:
-        Var x;
-        Begin
-            x := 10;
-        End
         Ожидаемый результат: Успешный разбор без ошибок.
         """
         code = """
