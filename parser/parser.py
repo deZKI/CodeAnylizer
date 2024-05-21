@@ -194,7 +194,7 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        node = ASTNode('AssignList',  line=self.__current_token.line)
+        node = ASTNode('AssignList', line=self.__current_token.line)
         self.graph.node('AssignList', '<Список присваиваний>')
         self.graph.edge('Program', 'AssignList')
         node.add_child(self.assignment())
@@ -224,7 +224,10 @@ class Parser:
         self.__eat(TokenType.EQUAL)
         node.add_child(self.expression())
         self.__eat(TokenType.SEMICOLON)
-        self.__eat(TokenType.NEWLINE)  # NewLine
+        try:
+            self.__eat(TokenType.NEWLINE)  # NewLine
+        except Exception as e:
+            return node
         return node
 
     def expression(self) -> ASTNode:
