@@ -1,7 +1,7 @@
 import unittest
 
 from lexer.tokenizer import Tokenizer
-from parser import Parser
+from syntatic.parser import Parser
 
 
 class TestParser(unittest.TestCase):
