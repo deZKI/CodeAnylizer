@@ -216,7 +216,8 @@ class Parser:
         self.__eat(TokenType.EQUAL)
         node.add_child(self.__expression())
         self.__eat(TokenType.SEMICOLON)
-        self.__eat(TokenType.NEWLINE)  # NewLine
+        while self.__current_token and self.__current_token.t_type == TokenType.NEWLINE:
+            self.current_token_index += 1
         return node
 
     def __expression(self) -> ASTNode:
