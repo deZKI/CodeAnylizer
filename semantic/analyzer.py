@@ -1,4 +1,4 @@
-from parser.parser import ASTNode
+from syntatic.parser import ASTNode
 
 
 class SemanticAnalyzer:
