@@ -113,6 +113,8 @@ class Parser:
         self.__eat(TokenType.KEYWORD, value="Begin")  # Begin
         self.__eat(TokenType.NEWLINE)  # NewLine
         node.add_child(self.__assignment_list())
+        while self.__current_token and self.__current_token.t_type == TokenType.NEWLINE:
+            self.current_token_index += 1
         self.__eat(TokenType.KEYWORD, value="End")  # End
         return node
 
@@ -186,6 +188,9 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
+        while self.__current_token and self.__current_token.t_type == TokenType.NEWLINE:
+            self.current_token_index += 1
+
         node = ASTNode('AssignList', line=self.__current_token.line)
         node.add_child(self.__assignment())
         while self.__current_token and self.__current_token.t_type == TokenType.IDENTIFIER:
