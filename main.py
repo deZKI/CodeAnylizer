@@ -1,6 +1,5 @@
-# Пример кода на вашем языке
 from lexer.tokenizer import Tokenizer
-from parser.parser import Parser
+from syntatic.parser import Parser
 from semantic.analyzer import SemanticAnalyzer
 
 code = """

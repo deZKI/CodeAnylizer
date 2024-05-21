@@ -1,9 +1,7 @@
-import graphviz
-
 from lexer.models import TokenType, Token
 from typing import Optional, Union, List
 
-from .ast_node import ASTNode
+from syntatic.ast_node import ASTNode
 
 
 class Parser:
@@ -36,7 +34,6 @@ class Parser:
     def __init__(self, tokens: List[Token]):
         self.tokens = tokens
         self.current_token_index = 0
-        self.graph = graphviz.Digraph(comment='Syntax Graph')
         self.node_counter = 0
 
     @property
@@ -51,7 +48,7 @@ class Parser:
             return self.tokens[self.current_token_index]
         return None
 
-    def __eat(self, token_type: TokenType):
+    def __eat(self, token_type: TokenType, value=None):
         """
         Проверяет, соответствует ли текущий токен ожидаемому типу, и переходит к следующему токену.
 
@@ -62,11 +59,13 @@ class Parser:
             Exception: Если текущий токен не соответствует ожидаемому типу или достигнут конец списка токенов.
         """
         if self.__current_token and self.__current_token.t_type == token_type:
+            if value and self.__current_token.value != value:
+                self.__error(token_type, value)
             self.current_token_index += 1
         else:
             self.__error(token_type)
 
-    def __error(self, expected_type: Union[TokenType, str]):
+    def __error(self, expected_type: Union[TokenType, str], value=None):
         """
         Вызывает исключение с сообщением об ошибке, указывающим ожидаемый и фактический типы токенов.
 
@@ -79,6 +78,9 @@ class Parser:
         if self.__current_token is None:
             raise Exception(f'Error: expected {expected_type}, but got end of input')
         else:
+            if self.__current_token.t_type == expected_type and value!=None:
+                raise Exception(
+                    f'Error: expected {value}, got {self.__current_token.value} on the line {self.__current_token.line}')
             raise Exception(
                 f'Error: expected {expected_type}, got {self.__current_token.t_type} on the line {self.__current_token.line}')
 
@@ -105,20 +107,16 @@ class Parser:
             error: Если синтаксический анализ не соответствует правилу.
         """
         node = ASTNode('Program', line=1)
-        self.graph.node('Program', '<Программа>')
-        self.graph.edge('Program', 'Var')
-        self.__eat(TokenType.KEYWORD)  # Var
-        node.add_child(self.variable_declaration())
+        self.__eat(TokenType.KEYWORD, value="Var")  # Var
+        node.add_child(self.__variable_declaration())
         self.__eat(TokenType.NEWLINE)  # NewLine
-        self.graph.edge('Program', 'Begin')
-        self.__eat(TokenType.KEYWORD)  # Begin
+        self.__eat(TokenType.KEYWORD, value="Begin")  # Begin
         self.__eat(TokenType.NEWLINE)  # NewLine
-        node.add_child(self.assignment_list())
-        self.__eat(TokenType.KEYWORD)  # End
-        self.graph.edge('Program', 'End')
+        node.add_child(self.__assignment_list())
+        self.__eat(TokenType.KEYWORD, value="End")  # End
         return node
 
-    def variable_declaration(self) -> ASTNode:
+    def __variable_declaration(self) -> ASTNode:
         """
         Обрабатывает правило <Объявление переменных>.
 
@@ -132,12 +130,10 @@ class Parser:
             error: Если синтаксический анализ не соответствует правилу.
         """
         node = ASTNode('VarDecl', line=self.__current_token.line)
-        self.graph.node('VarDecl', '<Объявление переменных>')
-        self.graph.edge('Var', 'VarDecl')
-        node.add_child(self.identifier_list())
+        node.add_child(self.__identifier_list())
         return node
 
-    def identifier_list(self) -> ASTNode:
+    def __identifier_list(self) -> ASTNode:
         """
         Обрабатывает список идентификаторов.
 
@@ -151,16 +147,14 @@ class Parser:
             error: Если синтаксический анализ не соответствует правилу.
         """
         node = ASTNode('IdList', line=1)
-        self.graph.node('IdList', '<Список переменных>')
-        self.graph.edge('VarDecl', 'IdList')
-        node.add_child(self.identifier())
+        node.add_child(self.__identifier())
         while self.__current_token and self.__current_token.t_type == TokenType.COMMA:
             self.__eat(TokenType.COMMA)
-            node.add_child(self.identifier())
+            node.add_child(self.__identifier())
         self.__eat(TokenType.SEMICOLON)
         return node
 
-    def identifier(self) -> ASTNode:
+    def __identifier(self) -> ASTNode:
         """
         Обрабатывает один идентификатор.
 
@@ -174,14 +168,12 @@ class Parser:
             error: Если синтаксический анализ не соответствует правилу.
         """
         node_id = f'Ident{self.node_counter}'
-        self.graph.node(node_id, '<Идент>')
-        self.graph.edge('IdList', node_id)
         self.node_counter += 1
         node = ASTNode('Ident', value=self.__current_token.value, line=self.__current_token.line)
         self.__eat(TokenType.IDENTIFIER)
         return node
 
-    def assignment_list(self) -> ASTNode:
+    def __assignment_list(self) -> ASTNode:
         """
         Обрабатывает список присваиваний.
 
@@ -194,15 +186,13 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        node = ASTNode('AssignList',  line=self.__current_token.line)
-        self.graph.node('AssignList', '<Список присваиваний>')
-        self.graph.edge('Program', 'AssignList')
-        node.add_child(self.assignment())
+        node = ASTNode('AssignList', line=self.__current_token.line)
+        node.add_child(self.__assignment())
         while self.__current_token and self.__current_token.t_type == TokenType.IDENTIFIER:
-            node.add_child(self.assignment())
+            node.add_child(self.__assignment())
         return node
 
-    def assignment(self) -> ASTNode:
+    def __assignment(self) -> ASTNode:
         """
         Обрабатывает одно присваивание.
 
@@ -215,19 +205,16 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        node_id = f'Assign{self.node_counter}'
-        self.graph.node(node_id, '<Присваивание>')
-        self.graph.edge('AssignList', node_id)
         self.node_counter += 1
         node = ASTNode('Assign', line=self.__current_token.line)
-        node.add_child(self.identifier())
+        node.add_child(self.__identifier())
         self.__eat(TokenType.EQUAL)
-        node.add_child(self.expression())
+        node.add_child(self.__expression())
         self.__eat(TokenType.SEMICOLON)
         self.__eat(TokenType.NEWLINE)  # NewLine
         return node
 
-    def expression(self) -> ASTNode:
+    def __expression(self) -> ASTNode:
         """
         Обрабатывает выражение.
 
@@ -240,17 +227,17 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        node = self.term()
+        node = self.__term()
         while self.__current_token and self.__current_token.t_type in (
                 TokenType.BINARY_OPERATOR,) and self.__current_token.value in ('+', '-'):
             op_node = ASTNode('BinOp', value=self.__current_token.value, line=self.__current_token.line)
             self.__eat(self.__current_token.t_type)
             op_node.add_child(node)
-            op_node.add_child(self.term())
+            op_node.add_child(self.__term())
             node = op_node
         return node
 
-    def term(self) -> ASTNode:
+    def __term(self) -> ASTNode:
         """
         Обрабатывает терм в выражении.
 
@@ -263,17 +250,17 @@ class Parser:
         Вызывает:
             error: Если синтаксический анализ не соответствует правилу.
         """
-        node = self.factor()
+        node = self.__factor()
         while self.__current_token and self.__current_token.t_type in (
                 TokenType.BINARY_OPERATOR,) and self.__current_token.value in ('*', '/'):
             op_node = ASTNode('BinOp', value=self.__current_token.value, line=self.__current_token.line)
             self.__eat(self.__current_token.t_type)
             op_node.add_child(node)
-            op_node.add_child(self.factor())
+            op_node.add_child(self.__factor())
             node = op_node
         return node
 
-    def factor(self) -> ASTNode:
+    def __factor(self) -> ASTNode:
         """
         Обрабатывает фактор в выражении.
 
@@ -288,13 +275,13 @@ class Parser:
         """
         if self.__current_token.t_type == TokenType.LPAREN:
             self.__eat(TokenType.LPAREN)
-            node = self.expression()
+            node = self.__expression()
             self.__eat(TokenType.RPAREN)
             return node
         elif self.__current_token.t_type == TokenType.UNARY_OPERATOR:
             node = ASTNode('UnaryOp', value=self.__current_token.value, line=self.__current_token.line)
             self.__eat(TokenType.UNARY_OPERATOR)
-            node.add_child(self.factor())
+            node.add_child(self.__factor())
             return node
         elif self.__current_token.t_type == TokenType.IDENTIFIER:
             node = ASTNode('Ident', value=self.__current_token.value, line=self.__current_token.line)
@@ -306,14 +293,3 @@ class Parser:
             return node
         else:
             self.__error("IDENTIFIER or CONSTANT")
-
-    def generate_syntax_graph(self, filename: str = 'syntax_graph'):
-        """
-        Генерирует и сохраняет синтаксический граф.
-
-        Параметры:
-            filename (str): Имя файла для сохранения графа.
-        """
-        ast = self.parse()
-        self.graph.render(filename, view=True)
-        return ast
