@@ -65,7 +65,7 @@ class Parser:
         else:
             self.__error(token_type)
 
-    def __error(self, expected_type: Union[TokenType, str], value=None):
+    def __error(self, expected_type: Union[TokenType], value=None):
         """
         Вызывает исключение с сообщением об ошибке, указывающим ожидаемый и фактический типы токенов.
 
@@ -298,4 +298,4 @@ class Parser:
             self.__eat(TokenType.CONSTANT)
             return node
         else:
-            self.__error("IDENTIFIER or CONSTANT")
+            raise Exception(f'Expected IDENTIFIER or CONSTANT on line {self.__current_token.line}')

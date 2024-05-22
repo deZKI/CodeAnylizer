@@ -4,9 +4,10 @@ from semantic.analyzer import SemanticAnalyzer
 from codegenerator.translytor import CodeGenerator
 
 code = """
-Var x, y;
+Var x, y, f;
 Begin
-    x := 5; y := (x + 10) * 5 + 2 * 2;
+    f := 54;
+    x := 5; y := (x + 10) * 5 + f * 2;
 End
 """
 

@@ -1,13 +1,12 @@
 from syntatic.parser import ASTNode
 
-
 class SemanticAnalyzer:
     """
     Класс SemanticAnalyzer выполняет семантический анализ AST.
 
     Атрибуты:
         ast (ASTNode): Корневой узел AST.
-        symbol_table (Dict[str, None]): Таблица символов для хранения объявленных переменных.
+        symbol_table (Dict[str, bool]): Таблица символов для хранения объявленных и инициализированных переменных.
 
     Методы:
         analyze(): Запускает процесс семантического анализа.
@@ -16,6 +15,7 @@ class SemanticAnalyzer:
         visit_Program(node): Обрабатывает узел <Program>.
         visit_VarDecl(node): Обрабатывает узел <VarDecl>.
         visit_IdList(node): Обрабатывает узел <IdList>.
+        visit_Ident(node): Обрабатывает узел <Ident>.
         visit_AssignList(node): Обрабатывает узел <AssignList>.
         visit_Assign(node): Обрабатывает узел <Assign>.
         visit_Expr(node): Обрабатывает узел <Expr>.
@@ -26,6 +26,9 @@ class SemanticAnalyzer:
     def __init__(self, ast: ASTNode):
         self.ast = ast
         self.symbol_table = {}
+        self.initialized_vars = set()
+
+        self.var_Visited = False  # переменная для отслеживания что посетили узел объявления переменных
 
     def analyze(self):
         """
@@ -71,6 +74,7 @@ class SemanticAnalyzer:
             node (ASTNode): Узел <VarDecl>.
         """
         self.generic_visit(node)
+        self.var_Visited = True
 
     def visit_IdList(self, node: ASTNode):
         """
@@ -82,8 +86,21 @@ class SemanticAnalyzer:
         for child in node.children:
             if child.value in self.symbol_table:
                 raise Exception(f'Semantic Error: variable {child.value} redeclared on line {child.line}')
-            self.symbol_table[child.value] = None
+            self.symbol_table[child.value] = None  # Переменная объявлена, но не инициализирована
             self.visit(child)
+
+    def visit_Ident(self, node: ASTNode):
+        """
+        Обрабатывает узел <Ident>.
+
+        Параметры:
+            node (ASTNode): Узел <Ident>.
+        """
+        if node.value not in self.symbol_table:
+            raise Exception(f'Semantic Error: variable {node.value} not declared on line {node.line}')
+
+        if node.value not in self.initialized_vars and self.var_Visited:
+            raise Exception(f'Semantic Error: variable {node.value} not initialized on line {node.line}')
 
     def visit_AssignList(self, node: ASTNode):
         """
@@ -103,7 +120,8 @@ class SemanticAnalyzer:
         """
         ident_node = node.children[0]
         if ident_node.value not in self.symbol_table:
-            raise Exception(f'Semantic Error: variable {ident_node.value} not declared on line 1')
+            raise Exception(f'Semantic Error: variable {ident_node.value} not declared on line {ident_node.line}')
+        self.initialized_vars.add(ident_node.value)
         self.generic_visit(node)
 
     def visit_Expr(self, node: ASTNode):
