@@ -55,7 +55,7 @@ class TestSemanticAnalyzer(unittest.TestCase):
         semantic_analyzer = SemanticAnalyzer(ast)
         with self.assertRaises(Exception) as cm:
             semantic_analyzer.analyze()
-        self.assertEqual(str(cm.exception), 'Semantic Error: variable y not declared on line 1')
+        self.assertEqual(str(cm.exception), 'Semantic Error: variable y not declared on line 3')
 
     def test_redeclaration_of_variable(self):
         """
